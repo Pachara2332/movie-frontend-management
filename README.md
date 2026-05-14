@@ -1,37 +1,47 @@
-# Movie Management Frontend
+# ระบบจัดการภาพยนตร์ (Movie Management Frontend)
 
-เว็บสำหรับจัดการข้อมูลภาพยนตร์ตามโจทย์ Technical Exam พัฒนาด้วย React + TypeScript + Vite โดยเชื่อมต่อกับ REST API สำหรับ Authentication และ Movie CRUD
+React + TypeScript สำหรับงานสอบ โดยมีหน้า GUI แบบมีการยืนยันตัวตน รองรับการจัดการข้อมูลภาพยนตร์ผ่าน REST API
 
-## ภาพรวมระบบ
+## URL ที่ใช้งาน
 
-ระบบนี้ให้ผู้ใช้เข้าสู่ระบบแล้วจัดการ Movie records ได้ โดยข้อมูลภาพยนตร์ประกอบด้วย
+- Frontend: `https://movie-frontend-management.vercel.app`
+- Backend API: `https://movie-backend-management.onrender.com/api`
 
-- Movie Title
-- Year Released
-- Rating: `G`, `PG`, `M`, `MA`, `R`
-- Movie image/poster (เพิ่มจากโจทย์เพื่อให้หน้าเว็บใช้งานจริงและดูข้อมูลได้ง่ายขึ้น)
+## ฟีเจอร์
 
-Role ของผู้ใช้มี 3 แบบ
+- ระบบล็อกอิน และลงทะเบียน
+- หน้า Dashboard แบบมีการป้องกัน พร้อมตรวจสอบ Session
+- จัดการภาพยนตร์แบบ CRUD (ชื่อ, ปีที่ออก, เรตติ้ง)
+- ตัวเลือกเรตติ้ง: `G`, `PG`, `M`, `MA`, `R`
+- รองรับการอัปโหลดโปสเตอร์ภาพยนตร์
+- แสดงผลแบบ List และ Grid
+- ค้นหาตามชื่อภาพยนตร์
+- เรียงลำดับตามปี, ชื่อ และเรตติ้ง
+- การ์ดสรุปข้อมูลบน Dashboard
+- แสดงปุ่มลบเฉพาะผู้ใช้ที่มีสิทธิ์ `MANAGER`
+- ฝั่ง Backend ตรวจสอบสิทธิ์การลบอีกชั้น
+- ยืนยันตัวตนด้วย Cookie พร้อม `withCredentials`
+- UI รองรับทั้ง Desktop และ Mobile
+
+## บทบาทผู้ใช้ (User Roles)
+
+ระบบรองรับ 3 บทบาท:
 
 - `MANAGER`
 - `TEAMLEADER`
 - `FLOORSTAFF`
 
-เฉพาะ `MANAGER` เท่านั้นที่ backend อนุญาตให้ลบ Movie record ได้ ส่วน frontend จะแสดง role ปัจจุบันและส่ง request ไปยัง API พร้อม cookie session
+เฉพาะผู้ใช้ที่มีบทบาท `MANAGER` เท่านั้นที่สามารถลบข้อมูลภาพยนตร์ได้ ผู้ใช้ที่ลงทะเบียนใหม่จะได้รับบทบาท `FLOORSTAFF` โดยอัตโนมัติ ทำให้ไม่สามารถเลือกบทบาทที่มีสิทธิ์สูงกว่าได้จากหน้าสมัครสมาชิก
 
-## Features ที่ทำแล้ว
+## ผู้ใช้สำหรับทดสอบ
 
-- Login / Register
-- Protected route สำหรับหน้า Dashboard
-- Cookie-based authentication กับ backend
-- Movie CRUD ผ่าน REST API
-- Create / Edit movie พร้อม validation ฝั่ง form
-- Upload หรือเปลี่ยน movie poster
-- List view และ Grid view
-- Dashboard summary: จำนวนหนัง, ปีล่าสุด, rating ที่พบบ่อยที่สุด
-- Role-based delete protection โดย backend
-- Axios instance กลาง พร้อม `withCredentials` และ redirect เมื่อ session หมดอายุ
-- Responsive UI สำหรับ desktop และ mobile
+```text
+manager / Password123!
+teamleader / Password123!
+floorstaff / Password123!
+```
+
+ใช้บัญชี `manager` เมื่อต้องการทดสอบการลบข้อมูล
 
 ## Tech Stack
 
@@ -43,30 +53,35 @@ Role ของผู้ใช้มี 3 แบบ
 - Tailwind CSS
 - Lucide React Icons
 
-## Project Structure
+## โครงสร้างโปรเจกต์
 
 ```text
 src/
   components/
-    auth/          # reusable auth UI + protected route
-    movies/        # movie form, table, grid, delete dialog
-  lib/             # axios config, auth storage, api error helper
-  pages/           # login, register, dashboard
-  routes/          # react-router setup
-  services/        # REST API service layer
-  types/           # shared TypeScript types
+    auth/          คอมโพเนนต์ UI สำหรับการยืนยันตัวตน และ Protected Route
+    movies/        ฟอร์มภาพยนตร์, ตาราง, กริด, ไดอะล็อกยืนยันการลบ
+  lib/             ตั้งค่า Axios, จัดการข้อมูล Auth, ตัวช่วยจัดการ Error จาก API
+  pages/           หน้าล็อกอิน, ลงทะเบียน, Dashboard
+  routes/          ตั้งค่า React Router
+  services/        ชั้น Service สำหรับเรียก REST API
+  types/           TypeScript Types ที่ใช้ร่วมกัน
 ```
 
-## การติดตั้งและรันโปรเจกต์
+## วิธีรันในเครื่อง
 
-ต้องมี Node.js ติดตั้งไว้ก่อน จากนั้นรันคำสั่ง:
+ติดตั้ง Dependencies:
 
 ```bash
 npm install
+```
+
+เริ่มต้น Development Server:
+
+```bash
 npm run dev
 ```
 
-เปิดเว็บตาม URL ที่ Vite แสดงใน terminal เช่น:
+เปิด URL ที่ Vite แสดงในเทอร์มินัล โดยปกติจะเป็น:
 
 ```text
 http://localhost:5173
@@ -74,43 +89,23 @@ http://localhost:5173
 
 ## Environment Variables
 
-ไฟล์ `.env` ใช้กำหนด API base URL:
+สำหรับการ Deploy บน Vercel และการใช้งานในเครื่อง ใช้ Path เดียวกัน:
 
 ```env
-VITE_API_BASE_URL=https://movie-backend-management.onrender.com/api
+VITE_API_BASE_URL=/api
 ```
 
-ถ้าต้องการรันกับ backend local ให้เปลี่ยนเป็น:
+Vite Dev Server จะ Proxy `/api` ไปยัง Backend บน Render ส่วน Vercel จะ Rewrite `/api/:path*` ไปยัง Backend เช่นกัน วิธีนี้ทำให้ Request ทำงานบน Same-Origin เพื่อให้ HttpOnly Cookie ใช้งานได้กับ `/auth/me`
+
+หากรัน Backend แยกในเครื่องโดยไม่ผ่าน Vite Proxy ให้ตั้งค่าดังนี้:
 
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
-หลังแก้ `.env` ให้ restart dev server ใหม่
+หลังเปลี่ยน Environment Variables ให้รีสตาร์ท Dev Server ใหม่
 
-## Test Users
-
-หน้า Login แสดง default users สำหรับทดสอบไว้แล้ว:
-
-```text
-manager / Password123!
-teamleader / Password123!
-floorstaff / Password123!
-```
-
-ใช้ `manager` เมื่อต้องการทดสอบการลบ Movie record
-
-## วิธีใช้งาน
-
-1. เข้า `/login`
-2. Login ด้วย user ที่ต้องการทดสอบ
-3. หน้า Dashboard จะโหลดรายการ movies จาก API
-4. กด `Add Movie` เพื่อเพิ่มข้อมูลหนัง
-5. กดปุ่ม edit เพื่อแก้ไขข้อมูลหรือเปลี่ยน poster
-6. กดปุ่ม delete เพื่อทดสอบการลบ
-7. ถ้า user ไม่ใช่ `MANAGER` backend จะปฏิเสธ request ลบตามสิทธิ์
-
-## REST API ที่ Frontend ใช้งาน
+## REST API ที่ใช้
 
 Authentication:
 
@@ -132,35 +127,44 @@ DELETE /movies/:id
 POST   /movies/:id/image/upload
 ```
 
-## Security Approach
+## แนวทางความปลอดภัย
 
-- ใช้ cookie-based auth ผ่าน `withCredentials`
-- หน้า Dashboard ถูกครอบด้วย `ProtectedRoute` และตรวจ session กับ `/auth/me`
-- ถ้า API ตอบ `401` จะ clear local user cache และ redirect ไปหน้า login
-- Frontend เก็บเฉพาะข้อมูล user สำหรับแสดงผล ไม่เก็บ password
-- การกำหนดสิทธิ์สำคัญ เช่น delete เฉพาะ `MANAGER` บังคับใช้ที่ backend เพื่อป้องกันการ bypass จาก browser
+- ใช้ HttpOnly Cookie จาก Backend สำหรับการยืนยันตัวตน
+- เรียก API พร้อม `withCredentials` ทุกครั้ง
+- ป้องกันหน้า Dashboard ด้วย `ProtectedRoute`
+- ตรวจสอบ Session ที่ยังใช้งานอยู่ผ่าน `/auth/me`
+- ล้าง Cache ข้อมูลผู้ใช้และ Redirect ไปหน้าล็อกอินเมื่อได้รับ `401`
+- เก็บเฉพาะข้อมูลที่ไม่ละเอียดอ่อนไว้ใน `localStorage`
+- ซ่อนปุ่มลบสำหรับผู้ใช้ที่ไม่มีบทบาท Manager ใน UI
+- ฝั่ง Backend ตรวจสอบสิทธิ์การลบอีกชั้นเสมอ
+- การลงทะเบียนสาธารณะจะกำหนดบทบาทเป็น `FLOORSTAFF` เท่านั้น
 
-## Performance / Maintainability
+## ประสิทธิภาพและการบำรุงรักษา
 
-- แยก API calls ไว้ใน service layer (`auth.service.ts`, `movie.service.ts`)
-- แยก reusable components สำหรับ auth form และ movie views
-- ใช้ TypeScript types กลางเพื่อลด field mismatch ระหว่าง UI กับ API
-- ใช้ `useMemo` สำหรับ dashboard summary ที่คำนวณจากรายการ movies
-- ใช้ Vite เพื่อ dev/build ที่เร็วและ bundle สำหรับ production
+- แยก API Call ไว้ใน Service Classes
+- ใช้ TypeScript Types ร่วมกัน เพื่อลดความผิดพลาดระหว่าง Frontend กับ API
+- การค้นหาและเรียงลำดับทำงานฝั่ง Client เพราะรายการภาพยนตร์มีขนาดเล็กและโหลดมาแล้ว
+- ใช้ `useMemo` สำหรับสรุปข้อมูล Dashboard, การค้นหา และการเรียงลำดับ
+- แบ่ง UI เป็น Component ย่อยที่ใช้ซ้ำได้
+- Vite ช่วยให้ Development และ Production Build ทำงานได้รวดเร็ว
 
-## Scripts
+## คำสั่ง Scripts
 
 ```bash
-npm run dev      # start development server
-npm run build    # type-check และ build production bundle
-npm run preview  # preview production build
-npm run lint     # run ESLint
+npm run dev      # เริ่ม Development Server
+npm run build    # ตรวจสอบ Type และ Build Production
+npm run preview  # ดูตัวอย่าง Production Build
+npm run lint     # รัน ESLint
 ```
 
-## Deployment Note
+## หมายเหตุการ Deploy
 
-โปรเจกต์มี `vercel.json` สำหรับรองรับ client-side routing บน Vercel โดย rewrite ทุก path กลับไปที่ `index.html`
+โปรเจกต์นี้ตั้งค่าสำหรับ Vercel:
 
-## Implementation Duration
+- `/api/:path*` จะ Rewrite ไปยัง Backend API บน Render
+- Path อื่นทั้งหมด Rewrite ไปยัง `index.html` สำหรับ Client-side Routing
+- Environment Variable บน Vercel ควรตั้งเป็น `VITE_API_BASE_URL=/api`
+
+## ระยะเวลาพัฒนา
 
 ใช้เวลาพัฒนาโดยประมาณ: 1 วัน

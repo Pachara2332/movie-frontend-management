@@ -2,24 +2,15 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthAlert from '../components/auth/AuthAlert';
 import AuthLayout from '../components/auth/AuthLayout';
-import AuthSelectField from '../components/auth/AuthSelectField';
 import AuthSubmitButton from '../components/auth/AuthSubmitButton';
 import AuthTextField from '../components/auth/AuthTextField';
 import { getApiErrorMessage } from '../lib/api-error';
 import { authService } from '../services/auth.service';
-import type { UserRole } from '../types/movie.types';
-
-const ROLE_OPTIONS: Array<{ label: string; value: UserRole }> = [
-  { label: 'Manager', value: 'MANAGER' },
-  { label: 'Team Leader', value: 'TEAMLEADER' },
-  { label: 'Floor Staff', value: 'FLOORSTAFF' },
-];
 
 const RegisterPage = () => {
   const navigate = useNavigate();
 
   const [username, setUsername] = useState('');
-  const [role, setRole] = useState<UserRole>('FLOORSTAFF');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -42,7 +33,7 @@ const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      await authService.register({ username, password, confirmPassword, role });
+      await authService.register({ username, password, confirmPassword, role: 'FLOORSTAFF' });
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(getApiErrorMessage(err, 'Registration failed'));
@@ -81,15 +72,6 @@ const RegisterPage = () => {
           placeholder="Username"
           disabled={isLoading}
           autoComplete="username"
-          required
-        />
-
-        <AuthSelectField
-          label="Role"
-          value={role}
-          onChange={(event) => setRole(event.target.value as UserRole)}
-          disabled={isLoading}
-          options={ROLE_OPTIONS}
           required
         />
 

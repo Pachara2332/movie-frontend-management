@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clapperboard, Film, LayoutGrid, List, LogOut, Plus, Star, X } from 'lucide-react';
+import { Clapperboard, Film, LayoutGrid, List, LogOut, Plus, Search, Star, X } from 'lucide-react';
 
 import MovieForm from '../components/movies/MovieForm';
 import MovieGrid from '../components/movies/MovieGrid';
@@ -8,7 +8,11 @@ import MovieTable from '../components/movies/MovieTable';
 import { getApiErrorMessage } from '../lib/api-error';
 import { authService } from '../services/auth.service';
 import { movieService } from '../services/movie.service';
-import type { Movie } from '../types/movie.types';
+import type { Movie, MovieRating } from '../types/movie.types';
+
+type SortMode = 'newest' | 'oldest' | 'title-asc' | 'title-desc' | 'rating-asc' | 'rating-desc';
+
+const RATING_ORDER: MovieRating[] = ['G', 'PG', 'M', 'MA', 'R'];
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,8 +23,11 @@ const DashboardPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortMode, setSortMode] = useState<SortMode>('newest');
 
   const currentUser = authService.getStoredUser();
+  const canDeleteMovies = currentUser?.role === 'MANAGER';
 
   const latestRelease = useMemo(() => {
     if (movies.length === 0) {
@@ -42,6 +49,31 @@ const DashboardPage: React.FC = () => {
 
     return Object.entries(ratingCounts).sort(([, a], [, b]) => b - a)[0][0];
   }, [movies]);
+
+  const visibleMovies = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const ratingRank = new Map(RATING_ORDER.map((rating, index) => [rating, index]));
+
+    return movies
+      .filter((movie) => movie.title.toLowerCase().includes(normalizedQuery))
+      .toSorted((a, b) => {
+        switch (sortMode) {
+          case 'oldest':
+            return a.yearReleased - b.yearReleased;
+          case 'title-asc':
+            return a.title.localeCompare(b.title);
+          case 'title-desc':
+            return b.title.localeCompare(a.title);
+          case 'rating-asc':
+            return (ratingRank.get(a.rating) ?? 0) - (ratingRank.get(b.rating) ?? 0);
+          case 'rating-desc':
+            return (ratingRank.get(b.rating) ?? 0) - (ratingRank.get(a.rating) ?? 0);
+          case 'newest':
+          default:
+            return b.yearReleased - a.yearReleased;
+        }
+      });
+  }, [movies, searchQuery, sortMode]);
 
   const loadMovies = useCallback(async () => {
     setIsLoading(true);
@@ -187,7 +219,10 @@ const DashboardPage: React.FC = () => {
         <div className="flex items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-bold">Movie Collection</h2>
-            <p className="text-sm text-[#b8b8b8] mt-1">Manage titles, release years, and content ratings</p>
+            <p className="text-sm text-[#b8b8b8] mt-1">
+              Showing {visibleMovies.length} of {movies.length} movies
+              {!canDeleteMovies && ' - delete is limited to managers'}
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -224,6 +259,39 @@ const DashboardPage: React.FC = () => {
               </button>
             )}
           </div>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-[1fr_220px]">
+          <label className="relative block">
+            <span className="sr-only">Search movies</span>
+            <Search
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8f8f8f]"
+              size={18}
+            />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search movie name"
+              className="h-12 w-full rounded-md border border-white/10 bg-[#121212] pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-[#737373] focus:border-[#f5c518]/70 focus:ring-2 focus:ring-[#f5c518]/20"
+            />
+          </label>
+
+          <label className="block">
+            <span className="sr-only">Sort movies</span>
+            <select
+              value={sortMode}
+              onChange={(event) => setSortMode(event.target.value as SortMode)}
+              className="h-12 w-full rounded-md border border-white/10 bg-[#121212] px-4 text-sm font-semibold text-white outline-none transition focus:border-[#f5c518]/70 focus:ring-2 focus:ring-[#f5c518]/20"
+            >
+              <option value="newest">Newest year</option>
+              <option value="oldest">Oldest year</option>
+              <option value="title-asc">Title A-Z</option>
+              <option value="title-desc">Title Z-A</option>
+              <option value="rating-asc">Rating G-R</option>
+              <option value="rating-desc">Rating R-G</option>
+            </select>
+          </label>
         </div>
 
         {showForm && (
@@ -279,11 +347,34 @@ const DashboardPage: React.FC = () => {
                 </p>
               </div>
             </div>
+          ) : visibleMovies.length === 0 ? (
+            <div className="p-20 text-center">
+              <div className="max-w-sm mx-auto">
+                <div className="w-16 h-16 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-5">
+                  <Search className="text-[#f5c518]" size={28} />
+                </div>
+
+                <h3 className="text-xl font-semibold mb-2">No matching movies</h3>
+                <p className="text-[#b8b8b8] text-sm leading-relaxed">
+                  Try a different movie name or sort option.
+                </p>
+              </div>
+            </div>
           ) : (
             viewMode === 'list' ? (
-              <MovieTable movies={movies} onEdit={handleEditMovie} onDelete={handleDeleteMovie} />
+              <MovieTable
+                movies={visibleMovies}
+                canDelete={canDeleteMovies}
+                onEdit={handleEditMovie}
+                onDelete={handleDeleteMovie}
+              />
             ) : (
-              <MovieGrid movies={movies} onEdit={handleEditMovie} onDelete={handleDeleteMovie} />
+              <MovieGrid
+                movies={visibleMovies}
+                canDelete={canDeleteMovies}
+                onEdit={handleEditMovie}
+                onDelete={handleDeleteMovie}
+              />
             )
           )}
         </div>

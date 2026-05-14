@@ -4,11 +4,12 @@ import type { Movie } from '../../types/movie.types';
 
 interface MovieTableProps {
   movies: Movie[];
+  canDelete: boolean;
   onEdit: (movie: Movie) => void;
   onDelete: (id: number) => void;
 }
 
-const MovieTable: React.FC<MovieTableProps> = ({ movies, onEdit, onDelete }) => {
+const MovieTable: React.FC<MovieTableProps> = ({ movies, canDelete, onEdit, onDelete }) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px]">
@@ -65,14 +66,16 @@ const MovieTable: React.FC<MovieTableProps> = ({ movies, onEdit, onDelete }) => 
                   >
                     <Pencil size={16} />
                   </button>
-                  <button
-                    onClick={() => onDelete(movie.id)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-500/20 bg-red-500/10 text-red-300 transition hover:bg-red-500/20"
-                    aria-label={`Delete ${movie.title}`}
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {canDelete && (
+                    <button
+                      onClick={() => onDelete(movie.id)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-500/20 bg-red-500/10 text-red-300 transition hover:bg-red-500/20"
+                      aria-label={`Delete ${movie.title}`}
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

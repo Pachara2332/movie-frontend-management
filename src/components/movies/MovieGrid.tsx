@@ -4,11 +4,12 @@ import type { Movie } from '../../types/movie.types';
 
 interface MovieGridProps {
   movies: Movie[];
+  canDelete: boolean;
   onEdit: (movie: Movie) => void;
   onDelete: (id: number) => void;
 }
 
-const MovieGrid: React.FC<MovieGridProps> = ({ movies, onEdit, onDelete }) => {
+const MovieGrid: React.FC<MovieGridProps> = ({ movies, canDelete, onEdit, onDelete }) => {
   return (
     <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 lg:grid-cols-4">
       {movies.map((movie) => (
@@ -46,14 +47,16 @@ const MovieGrid: React.FC<MovieGridProps> = ({ movies, onEdit, onDelete }) => {
                 <Pencil size={15} />
                 Edit
               </button>
-              <button
-                onClick={() => onDelete(movie.id)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-red-500/20 bg-red-500/10 text-red-300 transition hover:bg-red-500/20"
-                aria-label={`Delete ${movie.title}`}
-                title="Delete"
-              >
-                <Trash2 size={16} />
-              </button>
+              {canDelete && (
+                <button
+                  onClick={() => onDelete(movie.id)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-red-500/20 bg-red-500/10 text-red-300 transition hover:bg-red-500/20"
+                  aria-label={`Delete ${movie.title}`}
+                  title="Delete"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
           </div>
         </article>
