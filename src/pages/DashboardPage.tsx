@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clapperboard, Film, LayoutGrid, List, LogOut, Plus, Search, Star, X } from 'lucide-react';
 
+import ConfirmDialog from '../components/common/ConfirmDialog';
+import DeleteMovieDialog from '../components/movies/DeleteMovieDialog';
 import MovieForm from '../components/movies/MovieForm';
 import MovieGrid from '../components/movies/MovieGrid';
 import MovieTable from '../components/movies/MovieTable';
@@ -22,6 +24,10 @@ const DashboardPage: React.FC = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
+  const [movieToDelete, setMovieToDelete] = useState<Movie | null>(null);
+  const [isDeletingMovie, setIsDeletingMovie] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('newest');
@@ -109,12 +115,29 @@ const DashboardPage: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleDeleteMovie = async (id: number) => {
+  const handleDeleteMovieRequest = (id: number) => {
+    const selectedMovie = movies.find((movie) => movie.id === id);
+
+    if (selectedMovie) {
+      setMovieToDelete(selectedMovie);
+    }
+  };
+
+  const handleConfirmDeleteMovie = async () => {
+    if (!movieToDelete) {
+      return;
+    }
+
+    setIsDeletingMovie(true);
+
     try {
-      await movieService.delete(id);
-      setMovies((currentMovies) => currentMovies.filter((movie) => movie.id !== id));
+      await movieService.delete(movieToDelete.id);
+      setMovies((currentMovies) => currentMovies.filter((movie) => movie.id !== movieToDelete.id));
+      setMovieToDelete(null);
     } catch (err) {
       setError(getApiErrorMessage(err, 'Failed to delete movie'));
+    } finally {
+      setIsDeletingMovie(false);
     }
   };
 
@@ -131,9 +154,19 @@ const DashboardPage: React.FC = () => {
     setEditingMovie(null);
   };
 
-  const handleLogout = async () => {
-    await authService.logout();
-    navigate('/login');
+  const handleLogoutRequest = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      await authService.logout();
+      navigate('/login');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -164,7 +197,7 @@ const DashboardPage: React.FC = () => {
                 Signed in as <span className="text-[#f5c518]">{currentUser?.username || 'Guest'}</span>
               </p>
             <button
-              onClick={handleLogout}
+              onClick={handleLogoutRequest}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-[#e6e6e6] transition"
             >
               <LogOut size={16} />
@@ -366,19 +399,41 @@ const DashboardPage: React.FC = () => {
                 movies={visibleMovies}
                 canDelete={canDeleteMovies}
                 onEdit={handleEditMovie}
-                onDelete={handleDeleteMovie}
+                onDelete={handleDeleteMovieRequest}
               />
             ) : (
               <MovieGrid
                 movies={visibleMovies}
                 canDelete={canDeleteMovies}
                 onEdit={handleEditMovie}
-                onDelete={handleDeleteMovie}
+                onDelete={handleDeleteMovieRequest}
               />
             )
           )}
         </div>
       </main>
+
+      {movieToDelete && (
+        <DeleteMovieDialog
+          movieTitle={movieToDelete.title}
+          isLoading={isDeletingMovie}
+          onConfirm={handleConfirmDeleteMovie}
+          onCancel={() => setMovieToDelete(null)}
+        />
+      )}
+
+      {showLogoutDialog && (
+        <ConfirmDialog
+          title="Logout"
+          description="Are you sure you want to end this session?"
+          confirmLabel="Logout"
+          loadingLabel="Logging out..."
+          icon={LogOut}
+          isLoading={isLoggingOut}
+          onConfirm={handleConfirmLogout}
+          onCancel={() => setShowLogoutDialog(false)}
+        />
+      )}
     </div>
   );
 };
