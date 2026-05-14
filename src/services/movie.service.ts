@@ -3,14 +3,22 @@ import type { Movie, CreateMovieInput } from '../types/movie.types';
 
 const BASE_URL = '/movies';
 
+const normalizeMovieList = (data: unknown): Movie[] => {
+  if (Array.isArray(data)) {
+    return data as Movie[];
+  }
+
+  throw new Error('Movie API returned an unexpected response');
+};
+
 class MovieService {
   /**
    * Get all movies
    */
   async getAll(): Promise<Movie[]> {
     try {
-      const response = await axiosInstance.get<Movie[]>(BASE_URL);
-      return response.data;
+      const response = await axiosInstance.get<unknown>(BASE_URL);
+      return normalizeMovieList(response.data);
     } catch (error) {
       console.error('Error fetching movies:', error);
       throw error;
@@ -76,7 +84,7 @@ class MovieService {
     formData.append('image', file);
 
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}${BASE_URL}/${movieId}/image/upload`,
+      `${import.meta.env.VITE_API_BASE_URL || '/api'}${BASE_URL}/${movieId}/image/upload`,
       {
         method: 'POST',
         credentials: 'include',

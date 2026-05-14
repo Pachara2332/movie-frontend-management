@@ -5,7 +5,7 @@ import { authStorage } from './auth-storage';
 // Create axios instance with default config
 const createAxiosInstance = (): AxiosInstance => {
   const instance = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
     timeout: 10000,
     withCredentials: true,
     headers: {
